@@ -5,6 +5,8 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { CellsModule } from './cells/cells.module';
 import { CommonModule } from './common/common.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { FinanceModule } from './finance/finance.module';
 import { MembersModule } from './members/members.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
@@ -25,6 +27,8 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     MembersModule,
     CellsModule,
+    FinanceModule,
+    DashboardModule,
   ],
   providers: [
     {
