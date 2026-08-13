@@ -1,98 +1,159 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# IBJT — Backend (API de Gestão)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST do sistema de gestão da **Igreja Batista Jesus Transforma (IBJT)**:
+membros, células, finanças, relatórios mensais (PDF), dashboard e base para
+integração futura com WhatsApp.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Stack
 
-## Description
+- **Node.js** (>= 20.19) + **NestJS 11**
+- **PostgreSQL** + **Prisma 7** (driver adapter `@prisma/adapter-pg`)
+- **Swagger/OpenAPI** em `/api/docs`
+- **JWT** (access 15min + refresh 7d rotativo), **bcrypt** (12 rounds),
+  **helmet**, CORS restrito e **rate limiting** nas rotas de auth
+- **Puppeteer** para geração de PDFs dos balanços mensais
+- **Jest** (unitários + e2e)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Estrutura de módulos
 
-## Project setup
-
-```bash
-$ npm install
+```
+src/
+├── auth/        # login, refresh (rotação), logout, estratégias JWT
+├── users/       # gestão de usuários (papéis) — ADMIN
+├── members/     # CRUD de membros + LGPD (export/anonimização)
+├── cells/       # CRUD de células (contagem de membros)
+├── finance/     # transações (entradas/saídas)
+├── reports/     # balanço mensal + PDF (StorageProvider: local/S3)
+├── dashboard/   # totais rápidos
+├── whatsapp/    # stub (rota reservada) — ver src/whatsapp/README.md
+├── common/      # guards (JWT/RBAC), decorators, filtro de exceções Prisma,
+│                # interceptor de serialização (Decimal → number)
+└── generated/   # client Prisma gerado (não versionar)
 ```
 
-## Compile and run the project
+## Setup
+
+### 1. Pré-requisitos
+
+- Node.js >= 20.19 (recomendado 22+)
+- Docker (para o Postgres) **ou** um Postgres local
+
+### 2. Subir o banco
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+docker compose up -d
 ```
 
-## Run tests
+> O `docker-compose.yml` publica o Postgres na porta **5434** para não
+> conflitar com outros Postgres locais. Ajuste em `.env` se preferir.
+
+### 3. Configurar variáveis de ambiente
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+cp .env.example .env
 ```
 
-## Deployment
+Edite `DATABASE_URL` (usuário/senha/porta do seu Postgres) e troque os
+segredos de JWT. O `.env.example` já vem alinhado com o `docker-compose.yml`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 4. Instalar dependências
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+> Se o download do Chromium (puppeteer) não ocorrer durante o install,
+> rode `npx puppeteer browsers install chrome`.
 
-## Resources
+### 5. Migrar e popular o banco
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+npx prisma migrate dev        # aplica a migration inicial
+npx prisma db seed            # cria o usuário ADMIN padrão
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Usuário ADMIN padrão (definido por `ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD`):
 
-## Support
+```
+e-mail: admin@ibjt.com.br
+senha:  Admin@123
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+**Importante:** troque a senha padrão em produção.
 
-## Stay in touch
+### 6. Rodar em desenvolvimento
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+npm run start:dev
+```
 
-## License
+- API: `http://localhost:3000`
+- Swagger: `http://localhost:3000/api/docs`
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Scripts úteis
+
+```bash
+npm run build            # compila (dist/)
+npm run lint             # eslint
+npm test                 # testes unitários
+npm run test:e2e         # testes e2e (exige banco rodando e .env)
+npm run prisma:studio    # Prisma Studio
+npm run prisma:migrate   # nova migration (dev)
+npm run prisma:seed      # seed
+```
+
+## Autenticação e RBAC
+
+`POST /auth/login` retorna `accessToken` (15min) + `refreshToken` (7d).
+Use o access token como `Authorization: Bearer <token>`. Quando expirar,
+chame `POST /auth/refresh` com o corpo `{ "refreshToken": "..." }` — o par é
+**rotacionado** (o antigo é revogado). `POST /auth/logout` revoga o refresh.
+
+| Papel          | Acesso                                                                 |
+| -------------- | ---------------------------------------------------------------------- |
+| `ADMIN`        | Tudo.                                                                  |
+| `TESOUREIRO`   | `finance`, `reports`, `dashboard` e **leitura** de `members`.          |
+| `LIDER_CELULA` | Somente as células em que é líder e os membros vinculados (filtro aplicado **sempre no backend** pelo `liderId`). Sem acesso a finanças. |
+
+## Regras de negócio principais
+
+- **Valor de transação é sempre positivo** — quem define entrada/saída é o
+  campo `tipo` (`ENTRADA`/`SAIDA`).
+- **Saldo é sempre calculado** a partir do histórico; `FinancialReport` guarda
+  apenas um snapshot mensal (com `@@unique([mes, ano])`, gerar de novo
+  **sobrescreve**).
+- **Deletar célula** desvincula os membros (`cellId = null`), nunca os deleta.
+- **Deletar membro** é soft delete (`status = INATIVO`).
+- `email`, `telefone` e `cpf` de membros são únicos (opcionais).
+- Cada transação guarda `criadoPorId` (auditoria).
+
+## LGPD
+
+- Campo `consentimentoLGPD` em cada membro.
+- `GET /members/:id/export` — exporta todos os dados pessoais do membro.
+- `POST /members/:id/anonymize` — anonimiza os dados (irreversível, ADMIN).
+- `senhaHash` e dados desnecessários nunca são expostos nas respostas.
+
+## Armazenamento de PDFs
+
+- `STORAGE_PROVIDER=local` (padrão): salva em `storage/reports` e o download
+  é feito pelo endpoint `GET /reports/monthly/:ano/:mes/pdf`.
+- `STORAGE_PROVIDER=s3`: placeholder (implemente o provider em
+  `src/reports/storage/s3-storage.provider.ts`) sem alterar a lógica de
+  geração do relatório.
+
+## WhatsApp
+
+Não implementado — apenas stub. Veja `src/whatsapp/README.md`.
+
+## Testes
+
+- **Unitários** (`src/**/*.spec.ts`): auth (login/refresh/RBAC), criação de
+  transação (validação de tipo/valor), regra de exclusão de célula.
+- **E2E** (`test/`): fluxo de autenticação completo e geração do relatório
+  mensal contra o banco real.
+
+```bash
+npm test         # unitários
+npm run test:e2e # e2e (Postgres via docker compose + seed)
+```
