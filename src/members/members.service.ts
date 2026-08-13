@@ -158,8 +158,7 @@ export class MembersService {
         fotoUrl: dto.fotoUrl ?? member.fotoUrl,
         status: dto.status ?? member.status,
         cellId: dto.cellId ?? member.cellId,
-        consentimentoLGPD:
-          dto.consentimentoLGPD ?? member.consentimentoLGPD,
+        consentimentoLGPD: dto.consentimentoLGPD ?? member.consentimentoLGPD,
       },
       include: { cell: { select: { id: true, nome: true } } },
     });

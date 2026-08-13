@@ -1,15 +1,9 @@
 import { Transform } from 'class-transformer';
+import { IsEnum, IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
 import {
-  IsEnum,
-  IsInt,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Max,
-  MaxLength,
-  Min,
-} from 'class-validator';
-import { TransactionCategory, TransactionType } from '../../generated/prisma/enums';
+  TransactionCategory,
+  TransactionType,
+} from '../../generated/prisma/enums';
 
 export class QueryTransactionDto {
   @IsOptional()

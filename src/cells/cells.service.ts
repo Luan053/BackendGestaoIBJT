@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Role } from '../generated/prisma/enums';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
@@ -18,8 +14,7 @@ export class CellsService {
   }
 
   async findAll(user: AuthenticatedUser) {
-    const where =
-      this.isLeader(user) ? { liderId: user.id } : {};
+    const where = this.isLeader(user) ? { liderId: user.id } : {};
 
     return this.prisma.cell.findMany({
       where,

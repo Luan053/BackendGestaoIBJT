@@ -106,7 +106,8 @@ export class TransactionsService {
       data: {
         tipo: dto.tipo,
         categoria: dto.categoria,
-        valor: dto.valor !== undefined ? new Prisma.Decimal(dto.valor) : undefined,
+        valor:
+          dto.valor !== undefined ? new Prisma.Decimal(dto.valor) : undefined,
         data: dto.data ? new Date(dto.data) : undefined,
         descricao: dto.descricao,
         membroId: dto.membroId,

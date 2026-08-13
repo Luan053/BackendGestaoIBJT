@@ -1,10 +1,16 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '../generated/prisma/client';
-import { TransactionCategory, TransactionType } from '../generated/prisma/enums';
+import {
+  TransactionCategory,
+  TransactionType,
+} from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
-import { STORAGE_PROVIDER, StorageProvider } from './storage/storage-provider.interface';
+import {
+  STORAGE_PROVIDER,
+  StorageProvider,
+} from './storage/storage-provider.interface';
 import { ReportPdfService, PdfReportData } from './pdf/report-pdf.service';
 
 export interface MonthlyBalance {
@@ -107,7 +113,10 @@ export class ReportsService {
         categoria,
         total: daCategoria.reduce(
           (acc, t) =>
-            acc + (t.tipo === TransactionType.ENTRADA ? t.valor.toNumber() : -t.valor.toNumber()),
+            acc +
+            (t.tipo === TransactionType.ENTRADA
+              ? t.valor.toNumber()
+              : -t.valor.toNumber()),
           0,
         ),
         transacoes: daCategoria.map((t) => ({
@@ -162,7 +171,12 @@ export class ReportsService {
       'http://localhost:3000',
     )}/reports/monthly/${ano}/${mes}/pdf`;
 
-    const pdfUrl = await this.storage.save(key, buffer, 'application/pdf', publicUrl);
+    const pdfUrl = await this.storage.save(
+      key,
+      buffer,
+      'application/pdf',
+      publicUrl,
+    );
 
     // Upsert: o @@unique([mes, ano]) garante sobrescrita em vez de duplicado
     const report = await this.prisma.financialReport.upsert({
@@ -206,7 +220,9 @@ export class ReportsService {
 
     const key = `monthly/${ano}/${String(mes).padStart(2, '0')}/balanco.pdf`;
     if (!(await this.storage.exists(key))) {
-      throw new NotFoundException('Arquivo PDF não encontrado no armazenamento.');
+      throw new NotFoundException(
+        'Arquivo PDF não encontrado no armazenamento.',
+      );
     }
 
     return this.storage.read(key);

@@ -17,7 +17,10 @@ export class LocalStorageProvider implements StorageProvider {
 
   constructor(config: ConfigService) {
     this.dir = config.get<string>('STORAGE_LOCAL_DIR', './storage/reports');
-    this.baseUrl = config.get<string>('PUBLIC_BASE_URL', 'http://localhost:3000');
+    this.baseUrl = config.get<string>(
+      'PUBLIC_BASE_URL',
+      'http://localhost:3000',
+    );
   }
 
   async save(
@@ -38,8 +41,8 @@ export class LocalStorageProvider implements StorageProvider {
     return readFile(this.resolvePath(key));
   }
 
-  async exists(key: string): Promise<boolean> {
-    return existsSync(this.resolvePath(key));
+  exists(key: string): Promise<boolean> {
+    return Promise.resolve(existsSync(this.resolvePath(key)));
   }
 
   private resolvePath(key: string): string {

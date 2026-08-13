@@ -1,6 +1,5 @@
 import { Type } from 'class-transformer';
 import {
-  IsDateString,
   IsEnum,
   IsISO8601,
   IsNumber,
@@ -11,7 +10,10 @@ import {
   Max,
   MaxLength,
 } from 'class-validator';
-import { TransactionCategory, TransactionType } from '../../generated/prisma/enums';
+import {
+  TransactionCategory,
+  TransactionType,
+} from '../../generated/prisma/enums';
 
 export class CreateTransactionDto {
   @IsEnum(TransactionType, { message: 'tipo deve ser ENTRADA ou SAIDA.' })
@@ -22,7 +24,9 @@ export class CreateTransactionDto {
 
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 }, { message: 'valor inválido.' })
-  @IsPositive({ message: 'O valor deve ser sempre positivo (o tipo define entrada/saída).' })
+  @IsPositive({
+    message: 'O valor deve ser sempre positivo (o tipo define entrada/saída).',
+  })
   @Max(99_999_999.99, { message: 'Valor acima do limite permitido.' })
   valor: number;
 

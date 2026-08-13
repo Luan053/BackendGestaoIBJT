@@ -8,19 +8,21 @@ import { StorageProvider } from './storage-provider.interface';
  */
 @Injectable()
 export class S3StorageProvider implements StorageProvider {
-  async save(): Promise<string> {
-    throw new NotImplementedException(
-      'S3StorageProvider ainda não implementado. Use STORAGE_PROVIDER=local ou implemente o provider.',
+  save(): Promise<string> {
+    return Promise.reject(
+      new NotImplementedException(
+        'S3StorageProvider ainda não implementado. Use STORAGE_PROVIDER=local ou implemente o provider.',
+      ),
     );
   }
 
-  async read(): Promise<Buffer> {
-    throw new NotImplementedException(
-      'S3StorageProvider ainda não implementado.',
+  read(): Promise<Buffer> {
+    return Promise.reject(
+      new NotImplementedException('S3StorageProvider ainda não implementado.'),
     );
   }
 
-  async exists(): Promise<boolean> {
-    return false;
+  exists(): Promise<boolean> {
+    return Promise.resolve(false);
   }
 }

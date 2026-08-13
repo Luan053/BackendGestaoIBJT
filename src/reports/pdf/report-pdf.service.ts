@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import puppeteer from 'puppeteer';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import type { Browser } from 'puppeteer';
 import { TransactionCategory } from '../../generated/prisma/enums';
 
 export interface PdfReportData {
@@ -45,17 +45,47 @@ function formatDate(date: Date): string {
 }
 
 @Injectable()
-export class ReportPdfService {
+export class ReportPdfService implements OnModuleDestroy {
+  private browserPromise: Promise<Browser> | null = null;
+
+  /**
+   * puppeteer é ESM-only; o dynamic import via Function permite usá-lo tanto
+   * no runtime CommonJS do Nest quanto no ambiente de testes do Jest.
+   */
+  private async loadPuppeteer() {
+    // eslint-disable-next-line @typescript-eslint/no-implied-eval
+    const module = (await Function(
+      'return import("puppeteer")',
+    )()) as typeof import('puppeteer');
+    return module;
+  }
+
+  private async getBrowser(): Promise<Browser> {
+    if (!this.browserPromise) {
+      const puppeteer = await this.loadPuppeteer();
+      this.browserPromise = puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
+    }
+    return this.browserPromise;
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    if (this.browserPromise) {
+      const browser = await this.browserPromise;
+      await browser.close();
+      this.browserPromise = null;
+    }
+  }
+
   async generate(data: PdfReportData): Promise<Buffer> {
     const html = this.buildHtml(data);
+    const browser = await this.getBrowser();
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-
+    let page;
     try {
-      const page = await browser.newPage();
+      page = await browser.newPage();
       await page.setContent(html, { waitUntil: 'networkidle0' });
       return await page.pdf({
         format: 'A4',
@@ -63,7 +93,8 @@ export class ReportPdfService {
         margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
       });
     } finally {
-      await browser.close();
+      // fecha apenas a página; o browser fica em cache para o próximo relatório
+      await page?.close().catch(() => undefined);
     }
   }
 

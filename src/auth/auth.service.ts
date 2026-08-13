@@ -1,9 +1,5 @@
 import { createHash, randomUUID } from 'crypto';
-import {
-  ConflictException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -25,7 +21,10 @@ export class AuthService {
     private readonly config: ConfigService,
   ) {}
 
-  private expiresIn(value: string | undefined, fallback: string): JwtSignOptions['expiresIn'] {
+  private expiresIn(
+    value: string | undefined,
+    fallback: string,
+  ): JwtSignOptions['expiresIn'] {
     return (value ?? fallback) as JwtSignOptions['expiresIn'];
   }
 
@@ -62,20 +61,30 @@ export class AuthService {
 
   private async persistRefreshToken(
     userId: string,
-    refreshToken: string,
     userAgent?: string,
-  ) {
+  ): Promise<{ id: string; refreshToken: string }> {
     const expiresIn = this.refreshTokenExpiresIn();
     const expiresAt = new Date(Date.now() + parseDuration(expiresIn));
 
-    return this.prisma.refreshToken.create({
+    // Cria a linha primeiro para usar o id real como tokenId do JWT,
+    // garantindo o vínculo entre payload e registro no banco.
+    // O placeholder é único para não colidir com logins concorrentes.
+    const stored = await this.prisma.refreshToken.create({
       data: {
-        tokenHash: hashToken(refreshToken),
+        tokenHash: `pending-${randomUUID()}`,
         userId,
         expiresAt,
         userAgent: userAgent?.slice(0, 200) ?? null,
       },
     });
+
+    const refreshToken = this.issueRefreshToken(userId, stored.id);
+    await this.prisma.refreshToken.update({
+      where: { id: stored.id },
+      data: { tokenHash: hashToken(refreshToken) },
+    });
+
+    return { id: stored.id, refreshToken };
   }
 
   async login(dto: LoginDto, userAgent?: string) {
@@ -90,8 +99,7 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas.');
     }
 
-    const refreshToken = this.issueRefreshToken(user.id, randomUUID());
-    await this.persistRefreshToken(user.id, refreshToken, userAgent);
+    const { refreshToken } = await this.persistRefreshToken(user.id, userAgent);
 
     return {
       accessToken: this.issueAccessToken(user),
@@ -142,26 +150,33 @@ export class AuthService {
     }
 
     // Rotação: revoga o token antigo e emite um novo par
-    const newTokenId = randomUUID();
-    const newRefreshToken = this.issueRefreshToken(user.id, newTokenId);
-    await this.prisma.$transaction([
-      this.prisma.refreshToken.update({
+    const novaId = await this.prisma.$transaction(async (tx) => {
+      await tx.refreshToken.update({
         where: { id: stored.id },
         data: { revokedAt: new Date() },
-      }),
-      this.prisma.refreshToken.create({
+      });
+
+      const nova = await tx.refreshToken.create({
         data: {
-          tokenHash: hashToken(newRefreshToken),
+          tokenHash: `pending-${randomUUID()}`,
           userId: user.id,
           expiresAt: stored.expiresAt,
           userAgent: userAgent?.slice(0, 200) ?? null,
         },
-      }),
-    ]);
+      });
+      return nova.id;
+    });
+
+    // Vincula o payload ao id real da nova linha (igual ao login)
+    const finalToken = this.issueRefreshToken(user.id, novaId);
+    await this.prisma.refreshToken.update({
+      where: { id: novaId },
+      data: { tokenHash: hashToken(finalToken) },
+    });
 
     return {
       accessToken: this.issueAccessToken(user),
-      refreshToken: newRefreshToken,
+      refreshToken: finalToken,
       user: {
         id: user.id,
         nome: user.nome,

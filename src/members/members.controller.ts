@@ -11,7 +11,12 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Role } from '../generated/prisma/enums';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -57,10 +62,7 @@ export class MembersController {
   @ApiOperation({
     summary: 'Cria um membro (ADMIN ou LIDER_CELULA na própria célula)',
   })
-  create(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: CreateMemberDto,
-  ) {
+  create(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateMemberDto) {
     return this.membersService.create(user, dto);
   }
 
@@ -81,7 +83,8 @@ export class MembersController {
   @Roles(Role.ADMIN, Role.LIDER_CELULA)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Soft delete — muda status para INATIVO (ADMIN ou líder da célula)',
+    summary:
+      'Soft delete — muda status para INATIVO (ADMIN ou líder da célula)',
   })
   remove(
     @CurrentUser() user: AuthenticatedUser,
@@ -103,8 +106,7 @@ export class MembersController {
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary:
-      'LGPD — anonimiza os dados pessoais de um membro (irreversível)',
+    summary: 'LGPD — anonimiza os dados pessoais de um membro (irreversível)',
   })
   anonymize(@Param('id', ParseUUIDPipe) id: string) {
     return this.membersService.anonymize(id);

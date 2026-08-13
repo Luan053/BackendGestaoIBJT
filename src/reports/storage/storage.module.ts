@@ -2,7 +2,10 @@ import { Global, Module, Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LocalStorageProvider } from './local-storage.provider';
 import { S3StorageProvider } from './s3-storage.provider';
-import { STORAGE_PROVIDER, StorageProvider } from './storage-provider.interface';
+import {
+  STORAGE_PROVIDER,
+  StorageProvider,
+} from './storage-provider.interface';
 
 const storageProviderFactory: Provider<StorageProvider> = {
   provide: STORAGE_PROVIDER,

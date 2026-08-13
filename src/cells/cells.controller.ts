@@ -57,10 +57,7 @@ export class CellsController {
   @Patch(':id')
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Atualiza uma célula (ADMIN)' })
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateCellDto,
-  ) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateCellDto) {
     return this.cellsService.update(id, dto);
   }
 

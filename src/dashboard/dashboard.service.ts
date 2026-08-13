@@ -8,7 +8,11 @@ export class DashboardService {
 
   async stats() {
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
 
     // Semana: últimos 7 dias
     const weekStart = new Date(startOfDay.getTime() - 6 * 24 * 60 * 60 * 1000);
@@ -23,7 +27,10 @@ export class DashboardService {
         this.prisma.transaction.aggregate({
           where: {
             tipo: 'ENTRADA',
-            data: { gte: weekStart, lt: new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000) },
+            data: {
+              gte: weekStart,
+              lt: new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000),
+            },
           },
           _sum: { valor: true },
         }),
@@ -41,7 +48,9 @@ export class DashboardService {
 
     return {
       membrosAtivos,
-      entradasDaSemana: Number(entradasSemana._sum.valor ?? new Prisma.Decimal(0)),
+      entradasDaSemana: Number(
+        entradasSemana._sum.valor ?? new Prisma.Decimal(0),
+      ),
       despesasDoMes: Number(saidasMes._sum.valor ?? new Prisma.Decimal(0)),
       celulasAtivas: celulasAtivas,
       geradoEm: now,

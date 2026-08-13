@@ -11,7 +11,12 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Role } from '../generated/prisma/enums';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -46,7 +51,8 @@ export class TransactionsController {
 
   @Post()
   @ApiOperation({
-    summary: 'Cria uma transação (valor sempre positivo; tipo define entrada/saída)',
+    summary:
+      'Cria uma transação (valor sempre positivo; tipo define entrada/saída)',
   })
   create(
     @CurrentUser() user: AuthenticatedUser,
