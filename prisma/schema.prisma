@@ -1,0 +1,157 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  TESOUREIRO
+  LIDER_CELULA
+}
+
+enum MemberStatus {
+  ATIVO
+  INATIVO
+}
+
+enum TransactionType {
+  ENTRADA
+  SAIDA
+}
+
+enum TransactionCategory {
+  DIZIMO
+  OFERTA
+  EVENTO
+  CONTAS
+  MANUTENCAO
+  OUTROS
+}
+
+model User {
+  id               String            @id @default(uuid())
+  nome             String
+  email            String            @unique
+  senhaHash        String
+  role             Role
+  liderDeCelulas   Cell[]            @relation("CellLeader")
+  refreshTokens    RefreshToken[]
+  transactions     Transaction[]     @relation("TransactionCreator")
+  financialReports FinancialReport[] @relation("ReportCreator")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model Member {
+  id                String         @id @default(uuid())
+  nome              String
+  email             String?        @unique
+  telefone          String?        @unique
+  cpf               String?        @unique
+  dataNascimento    DateTime?
+  dataBatismo       DateTime?
+  endereco          String?
+  fotoUrl           String?
+  status            MemberStatus   @default(ATIVO)
+  cellId            String?
+  cell              Cell?          @relation(fields: [cellId], references: [id])
+  consentimentoLGPD Boolean        @default(false)
+  transactions      Transaction[]
+  conversations     Conversation[]
+  anonymizedAt      DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([cellId])
+  @@index([status])
+}
+
+model Cell {
+  id          String   @id @default(uuid())
+  nome        String
+  liderId     String?
+  lider       User?    @relation("CellLeader", fields: [liderId], references: [id])
+  diaDaSemana String
+  horario     String
+  local       String
+  membros     Member[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Transaction {
+  id          String              @id @default(uuid())
+  tipo        TransactionType
+  categoria   TransactionCategory
+  valor       Decimal             @db.Decimal(10, 2)
+  data        DateTime
+  descricao   String?
+  membroId    String?
+  membro      Member?             @relation(fields: [membroId], references: [id])
+  criadoPorId String
+  criadoPor   User?               @relation("TransactionCreator", fields: [criadoPorId], references: [id])
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([data])
+  @@index([membroId])
+}
+
+model FinancialReport {
+  id            String   @id @default(uuid())
+  mes           Int
+  ano           Int
+  saldoInicial  Decimal  @db.Decimal(10, 2)
+  totalEntradas Decimal  @db.Decimal(10, 2)
+  totalSaidas   Decimal  @db.Decimal(10, 2)
+  saldoFinal    Decimal  @db.Decimal(10, 2)
+  pdfUrl        String?
+  geradoPorId   String
+  geradoPor     User?    @relation("ReportCreator", fields: [geradoPorId], references: [id])
+  geradoEm      DateTime @default(now())
+
+  @@unique([mes, ano])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  userAgent String?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Conversation {
+  id        String    @id @default(uuid())
+  memberId  String
+  member    Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  telefone  String
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([memberId, telefone])
+  @@index([telefone])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  remetente      String
+  conteudo       String
+  lida           Boolean      @default(false)
+  sentAt         DateTime     @default(now())
+
+  @@index([conversationId, sentAt])
+}

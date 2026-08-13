@@ -22,3 +22,12 @@ lerna-debug.log*
 # temp directory
 .temp
 .tmp
+
+# Prisma
+src/generated
+
+# Uploaded/stored files
+/storage
+
+# coverage
+/coverage

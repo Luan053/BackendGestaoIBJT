@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ibjt-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ibjt
+      POSTGRES_PASSWORD: ibjt123
+      POSTGRES_DB: ibjt
+    ports:
+      - '5434:5432'
+    volumes:
+      - ibjt_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ibjt -d ibjt']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  ibjt_pgdata:
