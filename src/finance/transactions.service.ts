@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { toLocalDate } from '../common/utils/date.util';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
@@ -24,7 +25,7 @@ export class TransactionsService {
         tipo: dto.tipo,
         categoria: dto.categoria,
         valor: new Prisma.Decimal(dto.valor),
-        data: dto.data ? new Date(dto.data) : new Date(),
+        data: toLocalDate(dto.data) ?? new Date(),
         descricao: dto.descricao ?? null,
         membroId: dto.membroId ?? null,
         criadoPorId: user.id,
@@ -108,7 +109,7 @@ export class TransactionsService {
         categoria: dto.categoria,
         valor:
           dto.valor !== undefined ? new Prisma.Decimal(dto.valor) : undefined,
-        data: dto.data ? new Date(dto.data) : undefined,
+        data: dto.data !== undefined ? toLocalDate(dto.data) ?? undefined : undefined,
         descricao: dto.descricao,
         membroId: dto.membroId,
         criadoPorId: user.id,

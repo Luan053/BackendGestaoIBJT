@@ -6,6 +6,7 @@ import {
 import { Prisma } from '../generated/prisma/client';
 import { MemberStatus, Role } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
+import { toLocalDate } from '../common/utils/date.util';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
@@ -119,10 +120,8 @@ export class MembersService {
         email: dto.email ?? null,
         telefone: dto.telefone ?? null,
         cpf: dto.cpf ?? null,
-        dataNascimento: dto.dataNascimento
-          ? new Date(dto.dataNascimento)
-          : null,
-        dataBatismo: dto.dataBatismo ? new Date(dto.dataBatismo) : null,
+        dataNascimento: toLocalDate(dto.dataNascimento),
+        dataBatismo: toLocalDate(dto.dataBatismo),
         endereco: dto.endereco ?? null,
         fotoUrl: dto.fotoUrl ?? null,
         status: dto.status ?? MemberStatus.ATIVO,
@@ -148,12 +147,8 @@ export class MembersService {
         email: dto.email ?? member.email,
         telefone: dto.telefone ?? member.telefone,
         cpf: dto.cpf ?? member.cpf,
-        dataNascimento: dto.dataNascimento
-          ? new Date(dto.dataNascimento)
-          : member.dataNascimento,
-        dataBatismo: dto.dataBatismo
-          ? new Date(dto.dataBatismo)
-          : member.dataBatismo,
+        dataNascimento: toLocalDate(dto.dataNascimento) ?? member.dataNascimento,
+        dataBatismo: toLocalDate(dto.dataBatismo) ?? member.dataBatismo,
         endereco: dto.endereco ?? member.endereco,
         fotoUrl: dto.fotoUrl ?? member.fotoUrl,
         status: dto.status ?? member.status,

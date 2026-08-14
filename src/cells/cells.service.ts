@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Role } from '../generated/prisma/enums';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
@@ -57,6 +61,8 @@ export class CellsService {
   }
 
   async create(dto: CreateCellDto) {
+    await this.ensureLeader(dto.liderId);
+
     return this.prisma.cell.create({
       data: {
         nome: dto.nome,
@@ -74,6 +80,7 @@ export class CellsService {
 
   async update(id: string, dto: UpdateCellDto) {
     await this.ensureExists(id);
+    await this.ensureLeader(dto.liderId);
 
     return this.prisma.cell.update({
       where: { id },
@@ -102,6 +109,26 @@ export class CellsService {
       }),
       this.prisma.cell.delete({ where: { id } }),
     ]);
+  }
+
+  private async ensureLeader(liderId?: string | null) {
+    if (!liderId) {
+      return;
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: liderId } });
+
+    if (!user) {
+      throw new BadRequestException(
+        'Líder não encontrado. O liderId deve ser o id de um usuário do sistema: crie o usuário em "Usuários" (papel LIDER_CELULA) e use o id dele.',
+      );
+    }
+
+    if (user.role !== Role.LIDER_CELULA) {
+      throw new BadRequestException(
+        'O usuário informado não tem o papel LIDER_CELULA. Atualize o papel do usuário antes de nomeá-lo líder de célula.',
+      );
+    }
   }
 
   private async ensureExists(id: string) {
