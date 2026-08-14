@@ -6,10 +6,10 @@ import {
   TransactionType,
 } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
-import { AuthenticatedUser } from '../common/types/authenticated-user';
+import type { AuthenticatedUser } from '../common/types/authenticated-user';
 import {
   STORAGE_PROVIDER,
-  StorageProvider,
+  type StorageProvider,
 } from './storage/storage-provider.interface';
 import { ReportPdfService, PdfReportData } from './pdf/report-pdf.service';
 

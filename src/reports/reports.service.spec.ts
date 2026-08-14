@@ -8,7 +8,6 @@ import {
 } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReportsService } from './reports.service';
-import { ReportPdfService } from './pdf/report-pdf.service';
 import { STORAGE_PROVIDER } from './storage/storage-provider.interface';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 

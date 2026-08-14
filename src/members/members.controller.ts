@@ -20,7 +20,7 @@ import {
 import { Role } from '../generated/prisma/enums';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { AuthenticatedUser } from '../common/types/authenticated-user';
+import type { AuthenticatedUser } from '../common/types/authenticated-user';
 import { MembersService } from './members.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';

@@ -20,7 +20,7 @@ import {
 import { Role } from '../generated/prisma/enums';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { AuthenticatedUser } from '../common/types/authenticated-user';
+import type { AuthenticatedUser } from '../common/types/authenticated-user';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';

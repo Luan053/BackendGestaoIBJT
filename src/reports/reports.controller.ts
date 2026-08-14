@@ -10,11 +10,11 @@ import {
   Res,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { Role } from '../generated/prisma/enums';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { AuthenticatedUser } from '../common/types/authenticated-user';
+import type { AuthenticatedUser } from '../common/types/authenticated-user';
 import { ReportsService } from './reports.service';
 
 @ApiTags('reports')
