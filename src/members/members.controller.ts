@@ -84,7 +84,7 @@ export class MembersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:
-      'Soft delete — muda status para INATIVO (ADMIN ou líder da célula)',
+      'Exclui o membro permanentemente (ADMIN ou líder da célula)',
   })
   remove(
     @CurrentUser() user: AuthenticatedUser,

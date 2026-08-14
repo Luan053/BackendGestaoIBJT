@@ -163,12 +163,9 @@ export class MembersService {
     await this.findOne(user, id);
     await this.assertCanManage(user);
 
-    // Soft delete: apenas inativa, nunca remove fisicamente
-    return this.prisma.member.update({
-      where: { id },
-      data: { status: MemberStatus.INATIVO },
-      include: { cell: { select: { id: true, nome: true } } },
-    });
+    // Exclusão real: transações ficam sem vínculo (SET NULL) e
+    // conversas do WhatsApp são removidas em cascata (CASCADE)
+    return this.prisma.member.delete({ where: { id } });
   }
 
   async exportData(id: string) {
